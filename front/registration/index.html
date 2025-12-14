@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeliverEyerything - Clerk Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .api-status {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .api-status.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+        }
+        
+        .api-status .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        
+        .api-status.connected .status-dot {
+            background-color: var(--success-color);
+        }
+        
+        .tab-container {
+            display: flex;
+            background-color: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .tab:hover {
+            background-color: rgba(74, 111, 165, 0.05);
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        h2 {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2 i {
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            display: none;
+        }
+        
+        .result-container.show {
+            display: block;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-content {
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .items-container {
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .item-entry {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .item-entry:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .private-key-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: var(--border-radius);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .private-key-container:before {
+            content: 'IMPORTANT';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .private-key-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .private-key-value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            word-break: break-all;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+        
+        .private-key-warning {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .copy-btn {
+            background-color: white;
+            color: #f5576c;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .copy-btn:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+        }
+        
+        .id-info-box {
+            background-color: #e8f4fc;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+        
+        .id-info-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .id-info-content {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .site-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .site-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .site-links a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .private-key-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1><i class="fas fa-clipboard-check"></i> DeliverEyerything</h1>
+                    <p class="subtitle">Clerk Portal - Registration & Pickup Management</p>
+                </div>
+                <div class="api-status" id="apiStatus">
+                    <span class="status-dot"></span>
+                    <span>API Status: Checking...</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="tab-container">
+            <div class="tab active" data-tab="register">Register Parcel</div>
+            <div class="tab" data-tab="pickup">Pickup Parcel</div>
+        </div>
+        
+        <!-- Register Parcel Tab -->
+        <div class="tab-content active" id="register-tab">
+            <h2><i class="fas fa-clipboard-check"></i> Register New Parcel</h2>
+            
+            <div class="id-info-box">
+                <div class="id-info-title">
+                    <i class="fas fa-info-circle"></i> Instructions for Clerks
+                </div>
+                <div class="id-info-content">
+                    <p>When registering a parcel for a customer:</p>
+                    <ol style="margin-left: 20px; margin-top: 5px;">
+                        <li>Fill in all required parcel details</li>
+                        <li>List all items in the parcel with their values</li>
+                        <li>Give the <strong>Private ID</strong> to the customer</li>
+                        <li>Explain that they need it for tracking and pickup</li>
+                    </ol>
+                    <p style="margin-top: 10px; font-weight: 600; color: var(--danger-color);">
+                        <i class="fas fa-exclamation-triangle"></i> The Private ID will only be shown once!
+                    </p>
+                </div>
+            </div>
+            
+            <form id="registerForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="weight">Weight (kg) *</label>
+                        <input type="number" id="weight" required min="1" placeholder="Enter weight in kilograms">
+                    </div>
+                    <div class="form-group">
+                        <label for="value">Total Value ($) *</label>
+                        <input type="number" id="totalValue" required min="1" placeholder="Total value of all items">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="from">From (Location) *</label>
+                        <input type="text" id="from" required placeholder="Enter origin location">
+                    </div>
+                    <div class="form-group">
+                        <label for="to">To (Destination) *</label>
+                        <input type="text" id="to" required placeholder="Enter destination location">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="width">Width (cm)</label>
+                        <input type="number" id="width" min="1" placeholder="Enter width in centimeters">
+                    </div>
+                    <div class="form-group">
+                        <label for="height">Height (cm)</label>
+                        <input type="number" id="height" min="1" placeholder="Enter height in centimeters">
+                    </div>
+                    <div class="form-group">
+                        <label for="length">Length (cm)</label>
+                        <input type="number" id="length" min="1" placeholder="Enter length in centimeters">
+                    </div>
+                </div>
+                
+                <div class="items-container">
+                    <h3 style="margin-bottom: 15px; color: #555;">Items in Parcel</h3>
+                    <div id="itemsList">
+                        <div class="item-entry">
+                            <div class="form-group" style="flex: 2;">
+                                <label>Item Name</label>
+                                <input type="text" class="item-name" required placeholder="Enter item name">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Value ($)</label>
+                                <input type="number" class="item-value" required min="1" placeholder="Value">
+                            </div>
+                            <div class="form-group" style="flex: 0; display: flex; align-items: flex-end;">
+                                <button type="button" class="btn btn-danger remove-item" style="padding: 12px 15px;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="addItem" class="btn btn-warning">
+                        <i class="fas fa-plus"></i> Add Another Item
+                    </button>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <i class="fas fa-paper-plane"></i> Register Parcel
+                </button>
+            </form>
+            
+            <div class="result-container" id="registerResult">
+                <div class="result-title">
+                    <i class="fas fa-check-circle"></i> Registration Successful
+                </div>
+                <div class="result-content">
+                    <pre id="registerResultContent"></pre>
+                </div>
+            </div>
+            
+            <div class="private-key-container" id="privateKeyContainer" style="display: none;">
+                <div class="private-key-title">
+                    <i class="fas fa-key"></i> Private Parcel ID for Customer
+                </div>
+                <div class="private-key-value" id="privateKeyValue"></div>
+                <button class="copy-btn" id="copyPrivateKeyBtn">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <div class="private-key-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Give this to the customer:</strong> They will need this Private ID to:
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li>Track their parcel delivery status</li>
+                            <li>Pick up their parcel at the destination</li>
+                        </ul>
+                        <p style="margin-top: 10px; font-style: italic;">This ID will not be shown again.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pickup Parcel Tab -->
+        <div class="tab-content" id="pickup-tab">
+            <h2><i class="fas fa-hand-holding"></i> Customer Parcel Pickup</h2>
+            
+            <div class="id-info-box">
+                <div class="id-info-title">
+                    <i class="fas fa-info-circle"></i> Pickup Instructions
+                </div>
+                <div class="id-info-content">
+                    <p>When a customer arrives to pick up their parcel:</p>
+                    <ol style="margin-left: 20px; margin-top: 5px;">
+                        <li>Ask for their Private Parcel ID</li>
+                        <li>Verify the customer's identity</li>
+                        <li>Confirm pickup in the system</li>
+                        <li>Hand over the parcel to the customer</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <form id="pickupForm">
+                <div class="form-group">
+                    <label for="pickupPrivateParcelId">Customer's Private Parcel ID *</label>
+                    <input type="text" id="pickupPrivateParcelId" required placeholder="Enter customer's private parcel identifier">
+                    <small style="color: #666; display: block; margin-top: 5px;">This is the private identifier given to the customer during registration.</small>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Confirm Customer Pickup
+                </button>
+            </form>
+            
+            <div class="result-container" id="pickupResult">
+                <div class="result-title">
+                    <i class="fas fa-info-circle"></i> Pickup Status
+                </div>
+                <div class="result-content">
+                    <p id="pickupResultContent"></p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>DeliverEyerything Delivery Management System &copy; 2023 | Clerk Portal</p>
+            <div class="site-links">
+                <a href="tracking.html">Customer Tracking Portal</a>
+                <a href="delivery.html">Delivery Personnel Portal</a>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Note: This is a frontend demonstration. Ensure the API server is running at <code>http://delivereyerything.com</code></p>
+        </footer>
+    </div>
+    
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://delivereyerything.com';
+        
+        // DOM Elements
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const apiStatus = document.getElementById('apiStatus');
+        
+        // Tab Switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // Check API Status
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.status === 200 || response.status === 404) {
+                    apiStatus.classList.add('connected');
+                    apiStatus.querySelector('span:last-child').textContent = 'API Status: Connected';
+                    return true;
+                } else {
+                    throw new Error('API not reachable');
+                }
+            } catch (error) {
+                apiStatus.querySelector('span:last-child').textContent = 'API Status: Not Connected';
+                return false;
+            }
+        }
+        
+        // Initialize API status check
+        checkApiStatus();
+        
+        // Generate a random private ID (UUID v4)
+        function generatePrivateId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        
+        // Calculate SHA256 hash
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+        
+        // Register Parcel Form
+        const registerForm = document.getElementById('registerForm');
+        const itemsList = document.getElementById('itemsList');
+        const addItemBtn = document.getElementById('addItem');
+        const registerResult = document.getElementById('registerResult');
+        const registerResultContent = document.getElementById('registerResultContent');
+        const privateKeyContainer = document.getElementById('privateKeyContainer');
+        const privateKeyValue = document.getElementById('privateKeyValue');
+        const copyPrivateKeyBtn = document.getElementById('copyPrivateKeyBtn');
+        
+        // Add item to parcel registration
+        addItemBtn.addEventListener('click', () => {
+            const itemEntry = document.createElement('div');
+            itemEntry.className = 'item-entry';
+            itemEntry.innerHTML = `
+                <div class="form-group" style="flex: 2;">
+                    <label>Item Name</label>
+                    <input type="text" class="item-name" required placeholder="Enter item name">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Value ($)</label>
+                    <input type="number" class="item-value" required min="1" placeholder="Value">
+                </div>
+                <div class="form-group" style="flex: 0; display: flex; align-items: flex-end;">
+                    <button type="button" class="btn btn-danger remove-item" style="padding: 12px 15px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            itemsList.appendChild(itemEntry);
+            
+            // Add event listener to remove button
+            itemEntry.querySelector('.remove-item').addEventListener('click', () => {
+                itemEntry.remove();
+            });
+        });
+        
+        // Update total value when item values change
+        function updateTotalValue() {
+            const itemValues = document.querySelectorAll('.item-value');
+            let total = 0;
+            itemValues.forEach(input => {
+                const value = parseInt(input.value) || 0;
+                total += value;
+            });
+            document.getElementById('totalValue').value = total;
+        }
+        
+        // Listen for changes in item values
+        itemsList.addEventListener('input', (e) => {
+            if (e.target.classList.contains('item-value')) {
+                updateTotalValue();
+            }
+        });
+        
+        // Copy private key to clipboard
+        copyPrivateKeyBtn.addEventListener('click', async () => {
+            const privateKey = privateKeyValue.textContent;
+            try {
+                await navigator.clipboard.writeText(privateKey);
+                
+                // Visual feedback
+                const originalText = copyPrivateKeyBtn.innerHTML;
+                copyPrivateKeyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyPrivateKeyBtn.style.backgroundColor = '#28a745';
+                copyPrivateKeyBtn.style.color = 'white';
+                
+                setTimeout(() => {
+                    copyPrivateKeyBtn.innerHTML = originalText;
+                    copyPrivateKeyBtn.style.backgroundColor = '';
+                    copyPrivateKeyBtn.style.color = '';
+                }, 2000);
+            } catch (err) {
+                alert('Failed to copy private key: ' + err.message);
+            }
+        });
+        
+        // Register parcel form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Generate private ID and compute public ID
+            const privateId = generatePrivateId();
+            const publicId = await sha256(privateId);
+            
+            // Get form values
+            const weight = parseInt(document.getElementById('weight').value);
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            const width = parseInt(document.getElementById('width').value) || 0;
+            const height = parseInt(document.getElementById('height').value) || 0;
+            const length = parseInt(document.getElementById('length').value) || 0;
+            
+            // Get items
+            const items = [];
+            const itemEntries = document.querySelectorAll('.item-entry');
+            itemEntries.forEach(entry => {
+                const name = entry.querySelector('.item-name').value;
+                const value = parseInt(entry.querySelector('.item-value').value);
+                items.push({ name, value });
+            });
+            
+            // Create payload
+            const payload = {
+                from,
+                to,
+                publicId,
+                width,
+                height,
+                length,
+                weight,
+                items
+            };
+            
+            try {
+                // Show loading state
+                const submitBtn = registerForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show success result
+                    registerResultContent.textContent = JSON.stringify(data, null, 2);
+                    registerResult.classList.add('show');
+                    
+                    // Show the private key container
+                    privateKeyValue.textContent = privateId;
+                    privateKeyContainer.style.display = 'block';
+                    
+                    // Scroll to show the private key
+                    privateKeyContainer.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Clear form
+                    registerForm.reset();
+                    
+                    // Reset to one item entry
+                    itemsList.innerHTML = `
+                        <div class="item-entry">
+                            <div class="form-group" style="flex: 2;">
+                                <label>Item Name</label>
+                                <input type="text" class="item-name" required placeholder="Enter item name">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Value ($)</label>
+                                <input type="number" class="item-value" required min="1" placeholder="Value">
+                            </div>
+                            <div class="form-group" style="flex: 0; display: flex; align-items: flex-end;">
+                                <button type="button" class="btn btn-danger remove-item" style="padding: 12px 15px;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add event listener to the new remove button
+                    document.querySelector('.remove-item').addEventListener('click', function() {
+                        this.closest('.item-entry').remove();
+                    });
+                    
+                    // Reset total value
+                    document.getElementById('totalValue').value = '';
+                } else {
+                    alert(`Error: ${data.message || 'Failed to register parcel'}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            } finally {
+                // Reset button state
+                const submitBtn = registerForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Pickup Parcel Form
+        const pickupForm = document.getElementById('pickupForm');
+        const pickupResult = document.getElementById('pickupResult');
+        const pickupResultContent = document.getElementById('pickupResultContent');
+        
+        pickupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const privateParcelId = document.getElementById('pickupPrivateParcelId').value;
+            
+            try {
+                // Show loading state
+                const submitBtn = pickupForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/pickup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ privateParcelId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    pickupResultContent.textContent = data ? 'Parcel pickup confirmed successfully!' : 'Parcel pickup failed. Please try again.';
+                    pickupResult.classList.add('show');
+                    
+                    // Clear form
+                    pickupForm.reset();
+                } else {
+                    alert(`Error: ${data.message || 'Parcel not found'}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            } finally {
+                // Reset button state
+                const submitBtn = pickupForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Initialize remove button for the first item entry
+        document.querySelector('.remove-item').addEventListener('click', function() {
+            this.closest('.item-entry').remove();
+        });
+    </script>
+</body>
+</html>

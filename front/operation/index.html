@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeliverEyerything - Delivery Operations</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6fa5);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .api-status {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .api-status.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+        }
+        
+        .api-status .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        
+        .api-status.connected .status-dot {
+            background-color: var(--success-color);
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .instructions h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .operation-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid #e9ecef;
+        }
+        
+        h2 {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2 i {
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            display: none;
+        }
+        
+        .result-container.show {
+            display: block;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-content {
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+        }
+        
+        .parcel-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .parcel-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .parcel-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .parcel-id {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-awaiting {
+            background-color: #ffeaa7;
+            color: #e17055;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+        }
+        
+        .site-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .site-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .site-links a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .operations-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .parcel-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1><i class="fas fa-truck"></i> DeliverEyerything</h1>
+                    <p class="subtitle">Delivery Operations Portal</p>
+                </div>
+                <div class="api-status" id="apiStatus">
+                    <span class="status-dot"></span>
+                    <span>API Status: Checking...</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> Delivery Personnel Instructions</h3>
+            <p>Use this portal to manage parcels in transit. Follow these steps for each delivery leg:</p>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>Check what parcels are assigned to your leg</li>
+                <li>Notify departure when you pick up parcels</li>
+                <li>Notify arrival when you deliver parcels to the next location</li>
+            </ol>
+        </div>
+        
+        <div class="operations-grid">
+            <!-- View Parcels for Leg -->
+            <div class="operation-card">
+                <h2><i class="fas fa-boxes"></i> View Parcels for Leg</h2>
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.95rem;">Check which parcels are assigned to your delivery leg.</p>
+                
+                <form id="legForm">
+                    <div class="form-group">
+                        <label for="legId">Leg ID *</label>
+                        <input type="text" id="legId" required placeholder="Enter your leg identifier">
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-search"></i> Get Parcels for Leg
+                    </button>
+                </form>
+                
+                <div class="result-container" id="legResult">
+                    <div class="result-title">
+                        <i class="fas fa-boxes"></i> Parcels for Transportation
+                    </div>
+                    <div class="result-content">
+                        <div id="legResultContent"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notify Departure -->
+            <div class="operation-card">
+                <h2><i class="fas fa-truck-loading"></i> Notify Departure (Take)</h2>
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.95rem;">Notify the system when you pick up parcels for transport.</p>
+                
+                <form id="takeForm">
+                    <div class="form-group">
+                        <label for="takeParcelId">Parcel ID *</label>
+                        <input type="text" id="takeParcelId" required placeholder="Enter parcel identifier">
+                    </div>
+                    <div class="form-group">
+                        <label for="takeLegId">Leg ID *</label>
+                        <input type="text" id="takeLegId" required placeholder="Enter your leg identifier">
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-sign-out-alt"></i> Notify Departure
+                    </button>
+                </form>
+                
+                <div class="result-container" id="takeResult">
+                    <div class="result-title">
+                        <i class="fas fa-check-circle"></i> Departure Status
+                    </div>
+                    <div class="result-content">
+                        <p id="takeResultContent"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notify Arrival -->
+            <div class="operation-card">
+                <h2><i class="fas fa-download"></i> Notify Arrival (Put)</h2>
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.95rem;">Notify the system when you deliver parcels to the next location.</p>
+                
+                <form id="putForm">
+                    <div class="form-group">
+                        <label for="putParcelId">Parcel ID *</label>
+                        <input type="text" id="putParcelId" required placeholder="Enter parcel identifier">
+                    </div>
+                    <div class="form-group">
+                        <label for="putLocation">Location *</label>
+                        <input type="text" id="putLocation" required placeholder="Enter arrival location">
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-sign-in-alt"></i> Notify Arrival
+                    </button>
+                </form>
+                
+                <div class="result-container" id="putResult">
+                    <div class="result-title">
+                        <i class="fas fa-check-circle"></i> Arrival Status
+                    </div>
+                    <div class="result-content">
+                        <p id="putResultContent"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>DeliverEyerything Delivery Management System &copy; 2023 | Delivery Operations Portal</p>
+            <div class="site-links">
+                <a href="tracking.html">Customer Tracking Portal</a>
+                <a href="register.html">Clerk Registration Portal</a>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Note: This is a frontend demonstration. Ensure the API server is running at <code>http://delivereyerything.com</code></p>
+        </footer>
+    </div>
+    
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://delivereyerything.com';
+        
+        // DOM Elements
+        const apiStatus = document.getElementById('apiStatus');
+        
+        // Check API Status
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels/test`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.status === 200 || response.status === 404) {
+                    apiStatus.classList.add('connected');
+                    apiStatus.querySelector('span:last-child').textContent = 'API Status: Connected';
+                    return true;
+                } else {
+                    throw new Error('API not reachable');
+                }
+            } catch (error) {
+                apiStatus.querySelector('span:last-child').textContent = 'API Status: Not Connected';
+                return false;
+            }
+        }
+        
+        // Initialize API status check
+        checkApiStatus();
+        
+        // Get Parcels for Leg Form
+        const legForm = document.getElementById('legForm');
+        const legResult = document.getElementById('legResult');
+        const legResultContent = document.getElementById('legResultContent');
+        
+        legForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const legId = document.getElementById('legId').value.trim();
+            
+            if (!legId) {
+                alert('Please enter a Leg ID');
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = legForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/parcels/${legId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    legResultContent.innerHTML = '';
+                    
+                    if (data.parcelIds && data.parcelIds.length > 0) {
+                        const parcelCount = document.createElement('p');
+                        parcelCount.innerHTML = `<strong>Found ${data.parcelIds.length} parcel(s) for leg ${legId}:</strong>`;
+                        legResultContent.appendChild(parcelCount);
+                        
+                        const parcelList = document.createElement('div');
+                        parcelList.className = 'parcel-list';
+                        
+                        data.parcelIds.forEach(parcelId => {
+                            const parcelCard = document.createElement('div');
+                            parcelCard.className = 'parcel-card';
+                            
+                            parcelCard.innerHTML = `
+                                <div class="parcel-id">${parcelId}</div>
+                                <div>Status: <span class="status-badge status-awaiting">Ready for Transport</span></div>
+                                <div class="action-buttons">
+                                    <button class="btn btn-warning fill-take-btn" data-parcel-id="${parcelId}">
+                                        <i class="fas fa-truck-loading"></i> Fill Take Form
+                                    </button>
+                                    <button class="btn btn-success fill-put-btn" data-parcel-id="${parcelId}">
+                                        <i class="fas fa-download"></i> Fill Put Form
+                                    </button>
+                                </div>
+                            `;
+                            
+                            parcelList.appendChild(parcelCard);
+                        });
+                        
+                        legResultContent.appendChild(parcelList);
+                        
+                        // Add event listeners to the new buttons
+                        document.querySelectorAll('.fill-take-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const parcelId = this.getAttribute('data-parcel-id');
+                                document.getElementById('takeParcelId').value = parcelId;
+                                document.getElementById('takeLegId').value = legId;
+                                
+                                // Scroll to take form
+                                document.getElementById('takeForm').scrollIntoView({ behavior: 'smooth' });
+                            });
+                        });
+                        
+                        document.querySelectorAll('.fill-put-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const parcelId = this.getAttribute('data-parcel-id');
+                                document.getElementById('putParcelId').value = parcelId;
+                                
+                                // Scroll to put form
+                                document.getElementById('putForm').scrollIntoView({ behavior: 'smooth' });
+                            });
+                        });
+                    } else {
+                        legResultContent.innerHTML = '<p>No parcels awaiting transportation for this leg.</p>';
+                    }
+                    
+                    legResult.classList.add('show');
+                } else {
+                    alert(`Error: ${data.message || 'Failed to fetch parcels'}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            } finally {
+                // Reset button state
+                const submitBtn = legForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Take Parcel Form
+        const takeForm = document.getElementById('takeForm');
+        const takeResult = document.getElementById('takeResult');
+        const takeResultContent = document.getElementById('takeResultContent');
+        
+        takeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const parcelId = document.getElementById('takeParcelId').value.trim();
+            const legId = document.getElementById('takeLegId').value.trim();
+            
+            if (!parcelId || !legId) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = takeForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/take/${parcelId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ leg: { id: legId } })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    takeResultContent.textContent = 'Parcel departure notification successful!';
+                    takeResult.classList.add('show');
+                    
+                    // Clear form
+                    takeForm.reset();
+                    
+                    // Hide result after 5 seconds
+                    setTimeout(() => {
+                        takeResult.classList.remove('show');
+                    }, 5000);
+                } else {
+                    alert(`Error: ${data.message || 'Parcel not found'}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            } finally {
+                // Reset button state
+                const submitBtn = takeForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Put Parcel Form
+        const putForm = document.getElementById('putForm');
+        const putResult = document.getElementById('putResult');
+        const putResultContent = document.getElementById('putResultContent');
+        
+        putForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const parcelId = document.getElementById('putParcelId').value.trim();
+            const location = document.getElementById('putLocation').value.trim();
+            
+            if (!parcelId || !location) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = putForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/put/${parcelId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ location })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    putResultContent.textContent = 'Parcel arrival notification successful!';
+                    putResult.classList.add('show');
+                    
+                    // Clear form
+                    putForm.reset();
+                    
+                    // Hide result after 5 seconds
+                    setTimeout(() => {
+                        putResult.classList.remove('show');
+                    }, 5000);
+                } else {
+                    alert(`Error: ${data.message || 'Parcel not found'}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            } finally {
+                // Reset button state
+                const submitBtn = putForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Focus on first input when page loads
+        window.addEventListener('load', () => {
+            document.getElementById('legId').focus();
+        });
+    </script>
+</body>
+</html>

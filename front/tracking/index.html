@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeliverEyerything - Track Your Parcel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .api-status {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .api-status.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+        }
+        
+        .api-status .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        
+        .api-status.connected .status-dot {
+            background-color: var(--success-color);
+        }
+        
+        .main-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: var(--secondary-color);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2 i {
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1rem;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .info-box {
+            background-color: #e8f4fc;
+            border-left: 4px solid var(--primary-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .info-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            display: none;
+        }
+        
+        .result-container.show {
+            display: block;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .result-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+        }
+        
+        .history-entry {
+            padding: 20px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .history-entry:nth-child(even) {
+            background-color: #e9ecef;
+        }
+        
+        .history-timestamp {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .history-message {
+            color: #555;
+            font-size: 1rem;
+        }
+        
+        .status-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+        }
+        
+        .site-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .site-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .site-links a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .main-content {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .status-summary {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-box-open"></i> DeliverEyerything</h1>
+            <p class="subtitle">Track Your Parcel Delivery</p>
+            <div class="api-status" id="apiStatus">
+                <span class="status-dot"></span>
+                <span>API Status: Checking...</span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <h2><i class="fas fa-search-location"></i> Track Your Parcel</h2>
+            
+            <div class="info-box">
+                <div class="info-title">
+                    <i class="fas fa-info-circle"></i> How to Track Your Parcel
+                </div>
+                <div class="info-content">
+                    <p>Enter the <strong>Private Parcel ID</strong> that you received when your parcel was registered. This is the unique identifier that allows you to track your parcel's journey from origin to destination.</p>
+                    <p style="margin-top: 10px; font-weight: 600; color: var(--danger-color);">
+                        <i class="fas fa-exclamation-triangle"></i> Don't share your Private ID with others. It's your personal tracking key.
+                    </p>
+                </div>
+            </div>
+            
+            <form id="trackForm">
+                <div class="form-group">
+                    <label for="privateParcelId"><i class="fas fa-key"></i> Private Parcel ID *</label>
+                    <input type="text" id="privateParcelId" required placeholder="Enter your private parcel identifier">
+                    <small style="color: #666; display: block; margin-top: 5px;">This is the private identifier you received when registering the parcel.</small>
+                </div>
+                <button type="submit" class="btn">
+                    <i class="fas fa-search"></i> Track Parcel
+                </button>
+            </form>
+            
+            <div class="result-container" id="trackResult">
+                <div class="result-title">
+                    <i class="fas fa-history"></i> Parcel Tracking History
+                </div>
+                <div class="result-content">
+                    <div id="trackResultContent"></div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>DeliverEyerything Delivery Management System &copy; 2023 | Customer Portal</p>
+            <div class="site-links">
+                <a href="register.html">Register a New Parcel</a>
+                <a href="delivery.html">Delivery Personnel Portal</a>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Note: This is a frontend demonstration. Ensure the API server is running at <code>http://delivereyerything.com</code></p>
+        </footer>
+    </div>
+    
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://delivereyerything.com';
+        
+        // DOM Elements
+        const apiStatus = document.getElementById('apiStatus');
+        
+        // Check API Status
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/track`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.status === 200 || response.status === 404) {
+                    apiStatus.classList.add('connected');
+                    apiStatus.querySelector('span:last-child').textContent = 'API Status: Connected';
+                    return true;
+                } else {
+                    throw new Error('API not reachable');
+                }
+            } catch (error) {
+                apiStatus.querySelector('span:last-child').textContent = 'API Status: Not Connected';
+                return false;
+            }
+        }
+        
+        // Initialize API status check
+        checkApiStatus();
+        
+        // Track Parcel Form
+        const trackForm = document.getElementById('trackForm');
+        const trackResult = document.getElementById('trackResult');
+        const trackResultContent = document.getElementById('trackResultContent');
+        
+        trackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const privateParcelId = document.getElementById('privateParcelId').value.trim();
+            
+            if (!privateParcelId) {
+                alert('Please enter your Private Parcel ID');
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = trackForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Tracking...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/track`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ privateParcelId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Display tracking history
+                    trackResultContent.innerHTML = '';
+                    
+                    if (data.history && data.history.length > 0) {
+                        data.history.forEach(entry => {
+                            const historyEntry = document.createElement('div');
+                            historyEntry.className = 'history-entry';
+                            
+                            const date = new Date(entry.timestamp);
+                            const formattedDate = date.toLocaleString();
+                            
+                            historyEntry.innerHTML = `
+                                <div class="history-timestamp">${formattedDate}</div>
+                                <div class="history-message">${entry.message}</div>
+                            `;
+                            
+                            trackResultContent.appendChild(historyEntry);
+                        });
+                        
+                        // Show total stops
+                        const statusSummary = document.createElement('div');
+                        statusSummary.className = 'status-summary';
+                        statusSummary.innerHTML = `
+                            <div><strong>Total Stops:</strong> ${data.totalStops || 0}</div>
+                            <div><strong>Current Status:</strong> ${data.currentStatus || 'In Transit'}</div>
+                        `;
+                        trackResultContent.appendChild(statusSummary);
+                    } else {
+                        trackResultContent.innerHTML = '<p>No tracking history available for this parcel.</p>';
+                    }
+                    
+                    trackResult.classList.add('show');
+                    
+                    // Scroll to results
+                    trackResult.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert(`Error: ${data.message || 'Parcel not found. Please check your Private Parcel ID.'}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}. Please check if the API server is running.`);
+            } finally {
+                // Reset button state
+                const submitBtn = trackForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Focus on input when page loads
+        window.addEventListener('load', () => {
+            document.getElementById('privateParcelId').focus();
+        });
+    </script>
+</body>
+</html>
