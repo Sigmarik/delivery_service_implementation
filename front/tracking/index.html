@@ -431,7 +431,7 @@
                             const historyEntry = document.createElement('div');
                             historyEntry.className = 'history-entry';
                             
-                            const date = new Date(entry.timestamp);
+                            const date = new Date(entry.timestamp * 1000);
                             const formattedDate = date.toLocaleString();
                             
                             historyEntry.innerHTML = `
