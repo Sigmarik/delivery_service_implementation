@@ -22,14 +22,16 @@ class LegId:
 class Leg:
     """Represents a transportation leg between locations"""
     def __init__(self, id: str, operator: str, from_location: str, to_location: str, 
-                 max_weight: float, time: int, base_cost: float = 0, 
-                 weight_factor: float = 0.5, value_factor: float = 0.01):
+                 max_weight: float, time: int, leg_type: str,  # Added leg_type parameter
+                 base_cost: float, weight_factor: float, 
+                 value_factor: float):
         self.id = id
         self.operator = operator
         self.from_location = from_location
         self.to_location = to_location
         self.max_weight = max_weight
         self.time = time
+        self.leg_type = leg_type  # Can be 'air', 'water', 'road', or 'rail'
         self.base_cost = base_cost
         self.weight_factor = weight_factor
         self.value_factor = value_factor
@@ -51,6 +53,7 @@ class Leg:
             "to": self.to_location,
             "maxWeight": self.max_weight,
             "time": self.time,
+            "type": self.leg_type,  # Added type field
             "base_cost": self.base_cost,
             "weight_factor": self.weight_factor,
             "value_factor": self.value_factor
@@ -88,48 +91,66 @@ class LegList:
         }
 
 # ============================================
-# Constant List of Legs
+# Constant List of Legs (Updated with types)
 # ============================================
 
-# Create a comprehensive list of transportation legs
+# Create a comprehensive list of transportation legs with types
 CONSTANT_LEGS = [
-    # Domestic legs within Germany
-    Leg("leg_berlin_leipzig", "DB_Cargo", "Berlin", "Leipzig", 1000.0, 3, 50, 0.3, 0.005),
-    Leg("leg_berlin_hamburg", "DB_Cargo", "Berlin", "Hamburg", 1000.0, 4, 60, 0.35, 0.006),
-    Leg("leg_berlin_frankfurt", "DB_Cargo", "Berlin", "Frankfurt", 1000.0, 5, 70, 0.4, 0.007),
-    Leg("leg_leipzig_munich", "DB_Cargo", "Leipzig", "Munich", 800.0, 6, 80, 0.45, 0.008),
-    Leg("leg_hamburg_cologne", "DB_Cargo", "Hamburg", "Cologne", 900.0, 5, 65, 0.38, 0.006),
-    Leg("leg_frankfurt_stuttgart", "DB_Cargo", "Frankfurt", "Stuttgart", 700.0, 4, 55, 0.32, 0.005),
-    Leg("leg_munich_stuttgart", "DB_Cargo", "Munich", "Stuttgart", 600.0, 3, 40, 0.28, 0.004),
-    Leg("leg_cologne_dusseldorf", "DB_Cargo", "Cologne", "Dusseldorf", 500.0, 2, 25, 0.2, 0.003),
+    # Domestic legs within Germany (Rail)
+    Leg("leg_berlin_leipzig", "DB_Cargo", "Berlin", "Leipzig", 1000.0, 3, "rail", 50, 0.3, 0.005),
+    Leg("leg_berlin_hamburg", "DB_Cargo", "Berlin", "Hamburg", 1000.0, 4, "rail", 60, 0.35, 0.006),
+    Leg("leg_berlin_frankfurt", "DB_Cargo", "Berlin", "Frankfurt", 1000.0, 5, "rail", 70, 0.4, 0.007),
+    Leg("leg_leipzig_munich", "DB_Cargo", "Leipzig", "Munich", 800.0, 6, "rail", 80, 0.45, 0.008),
+    Leg("leg_hamburg_cologne", "DB_Cargo", "Hamburg", "Cologne", 900.0, 5, "rail", 65, 0.38, 0.006),
     
-    # International legs
-    Leg("leg_berlin_warsaw", "PKP_Cargo", "Berlin", "Warsaw", 1200.0, 8, 120, 0.5, 0.01),
-    Leg("leg_warsaw_prague", "PKP_Cargo", "Warsaw", "Prague", 1100.0, 7, 110, 0.48, 0.009),
-    Leg("leg_prague_vienna", "OBB_Cargo", "Prague", "Vienna", 900.0, 6, 90, 0.42, 0.008),
-    Leg("leg_vienna_budapest", "OBB_Cargo", "Vienna", "Budapest", 800.0, 5, 85, 0.4, 0.008),
-    Leg("leg_frankfurt_paris", "SNCF", "Frankfurt", "Paris", 1000.0, 8, 150, 0.55, 0.012),
-    Leg("leg_paris_brussels", "SNCF", "Paris", "Brussels", 800.0, 4, 80, 0.35, 0.007),
-    Leg("leg_brussels_amsterdam", "NMBS", "Brussels", "Amsterdam", 700.0, 3, 60, 0.3, 0.006),
-    Leg("leg_hamburg_copenhagen", "DSB", "Hamburg", "Copenhagen", 900.0, 7, 130, 0.52, 0.011),
+    # International rail connections
+    Leg("leg_berlin_warsaw", "PKP_Cargo", "Berlin", "Warsaw", 1200.0, 8, "rail", 120, 0.5, 0.01),
+    Leg("leg_warsaw_moscow", "RZD", "Warsaw", "Moscow", 1500.0, 24, "rail", 250, 0.6, 0.015),
+    Leg("leg_moscow_novosibirsk", "RZD", "Moscow", "Novosibirsk", 2000.0, 72, "rail", 450, 0.7, 0.02),
+    Leg("leg_novosibirsk_irkutsk", "RZD", "Novosibirsk", "Irkutsk", 1800.0, 48, "rail", 400, 0.65, 0.018),
+    Leg("leg_moscow_stpetersburg", "RZD", "Moscow", "St. Petersburg", 1200.0, 8, "rail", 150, 0.5, 0.012),
     
-    # Air freight legs (faster but more expensive)
-    Leg("leg_berlin_munich_air", "Lufthansa_Cargo", "Berlin", "Munich", 500.0, 2, 300, 1.0, 0.02),
-    Leg("leg_frankfurt_london_air", "British_Airways_Cargo", "Frankfurt", "London", 400.0, 3, 350, 1.2, 0.025),
-    Leg("leg_munich_rome_air", "Alitalia_Cargo", "Munich", "Rome", 450.0, 3, 320, 1.1, 0.022),
+    # Air freight legs
+    Leg("leg_berlin_munich_air", "Lufthansa_Cargo", "Berlin", "Munich", 500.0, 2, "air", 300, 1.0, 0.02),
+    Leg("leg_frankfurt_london_air", "British_Airways_Cargo", "Frankfurt", "London", 400.0, 3, "air", 350, 1.2, 0.025),
+    Leg("leg_moscow_frankfurt_air", "Aeroflot_Cargo", "Moscow", "Frankfurt", 600.0, 4, "air", 400, 1.3, 0.03),
+    Leg("leg_novosibirsk_moscow_air", "S7_Cargo", "Novosibirsk", "Moscow", 450.0, 5, "air", 380, 1.4, 0.028),
+    Leg("leg_toronto_vancouver_air", "Air_Canada_Cargo", "Toronto", "Vancouver", 500.0, 6, "air", 420, 1.5, 0.032),
+    Leg("leg_toronto_montreal_air", "Air_Canada_Cargo", "Toronto", "Montreal", 400.0, 2, "air", 250, 1.1, 0.022),
+    Leg("leg_london_toronto_air", "British_Airways_Cargo", "London", "Toronto", 700.0, 9, "air", 550, 1.8, 0.035),
+    Leg("leg_frankfurt_toronto_air", "Lufthansa_Cargo", "Frankfurt", "Toronto", 650.0, 9, "air", 520, 1.7, 0.034),
     
-    # Hub connections
-    Leg("leg_leipzig_hub", "DB_Express", "Leipzig", "Hub_Central", 2000.0, 4, 40, 0.25, 0.004),
-    Leg("leg_hub_central_leipzig", "DB_Express", "Hub_Central", "Leipzig", 2000.0, 4, 40, 0.25, 0.004),
-    Leg("leg_frankfurt_hub", "DB_Express", "Frankfurt", "Hub_Central", 2000.0, 3, 35, 0.22, 0.004),
-    Leg("leg_hub_central_frankfurt", "DB_Express", "Hub_Central", "Frankfurt", 2000.0, 3, 35, 0.22, 0.004),
-    Leg("leg_hub_central_munich", "DB_Express", "Hub_Central", "Munich", 2000.0, 6, 60, 0.35, 0.006),
-    Leg("leg_munich_hub_central", "DB_Express", "Munich", "Hub_Central", 2000.0, 6, 60, 0.35, 0.006),
+    # Water/Sea freight
+    Leg("leg_hamburg_rotterdam_sea", "MSC", "Hamburg", "Rotterdam", 5000.0, 24, "water", 800, 0.2, 0.008),
+    Leg("leg_rotterdam_montreal_sea", "MSC", "Rotterdam", "Montreal", 10000.0, 288, "water", 2000, 0.15, 0.005),
+    Leg("leg_vancouver_tokyo_sea", "COSCO", "Vancouver", "Tokyo", 8000.0, 336, "water", 1800, 0.18, 0.006),
+    Leg("leg_montreal_toronto_sea", "Fednav", "Montreal", "Toronto", 3000.0, 48, "water", 400, 0.25, 0.01),
+    Leg("leg_stpetersburg_hamburg_sea", "MSC", "St. Petersburg", "Hamburg", 6000.0, 120, "water", 1200, 0.22, 0.009),
     
-    # Regional/local legs
-    Leg("leg_berlin_suburb", "Local_Courier", "Berlin", "Berlin_Suburb", 100.0, 2, 20, 0.4, 0.008),
-    Leg("leg_munich_suburb", "Local_Courier", "Munich", "Munich_Suburb", 100.0, 2, 20, 0.4, 0.008),
-    Leg("leg_frankfurt_suburb", "Local_Courier", "Frankfurt", "Frankfurt_Suburb", 100.0, 2, 20, 0.4, 0.008),
+    # Road transport
+    Leg("leg_berlin_suburb", "DHL", "Berlin", "Berlin_Suburb", 100.0, 2, "road", 20, 0.4, 0.008),
+    Leg("leg_munich_suburb", "DHL", "Munich", "Munich_Suburb", 100.0, 2, "road", 20, 0.4, 0.008),
+    Leg("leg_toronto_mississauga", "UPS", "Toronto", "Mississauga", 150.0, 1, "road", 25, 0.45, 0.009),
+    Leg("leg_moscow_suburb", "DPD_Russia", "Moscow", "Moscow_Suburb", 120.0, 3, "road", 30, 0.5, 0.01),
+    Leg("leg_novosibirsk_suburb", "SDEK", "Novosibirsk", "Novosibirsk_Suburb", 100.0, 2, "road", 35, 0.55, 0.011),
+    Leg("leg_vancouver_burnaby", "FedEx", "Vancouver", "Burnaby", 120.0, 1, "road", 22, 0.42, 0.009),
+    Leg("leg_montreal_ottawa", "Loomis", "Montreal", "Ottawa", 500.0, 6, "road", 80, 0.35, 0.012),
+    Leg("leg_toronto_buffalo", "YRC", "Toronto", "Buffalo", 800.0, 4, "road", 120, 0.4, 0.015),
+    
+    # Additional Canadian connections (Rail)
+    Leg("leg_toronto_montreal_rail", "VIA_Rail", "Toronto", "Montreal", 800.0, 5, "rail", 90, 0.4, 0.01),
+    Leg("leg_montreal_quebec_rail", "VIA_Rail", "Montreal", "Quebec City", 700.0, 3, "rail", 70, 0.35, 0.009),
+    Leg("leg_toronto_windsor_rail", "CN_Rail", "Toronto", "Windsor", 900.0, 4, "rail", 85, 0.38, 0.011),
+    
+    # Additional Russian connections (Rail)
+    Leg("leg_novosibirsk_kazan", "RZD", "Novosibirsk", "Kazan", 1500.0, 36, "rail", 350, 0.6, 0.017),
+    Leg("leg_stpetersburg_helsinki", "VR", "St. Petersburg", "Helsinki", 800.0, 6, "rail", 120, 0.45, 0.012),
+    
+    # Hub connections (Mixed types)
+    Leg("leg_leipzig_hub", "DB_Express", "Leipzig", "Hub_Central", 2000.0, 4, "rail", 40, 0.25, 0.004),
+    Leg("leg_frankfurt_hub_air", "Lufthansa_Cargo", "Frankfurt", "Hub_Central", 600.0, 2, "air", 200, 0.8, 0.015),
+    Leg("leg_toronto_hub_road", "UPS", "Toronto", "Hub_NorthAmerica", 1000.0, 3, "road", 60, 0.3, 0.01),
+    Leg("leg_moscow_hub_rail", "RZD", "Moscow", "Hub_EastEurope", 1500.0, 8, "rail", 100, 0.4, 0.012),
 ]
 
 # Build location index for faster lookup

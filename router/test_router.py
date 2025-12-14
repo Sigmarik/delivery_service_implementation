@@ -20,16 +20,16 @@ from router import Leg, ParcelDescription, RoutingService, LegList, LegId
 
 @pytest.fixture
 def sample_legs() -> List[Leg]:
-    """Create a simplified set of legs for testing"""
+    """Create a simplified set of legs for testing - ALL AIR TYPE"""
     return [
-        Leg("leg_ab", "Operator1", "A", "B", 100.0, 2, 50, 0.5, 0.01),
-        Leg("leg_bc", "Operator2", "B", "C", 100.0, 3, 40, 0.4, 0.008),
-        Leg("leg_ac", "Operator3", "A", "C", 50.0, 1, 200, 1.0, 0.02),  # Direct but low capacity
-        Leg("leg_ad", "Operator4", "A", "D", 150.0, 4, 80, 0.6, 0.012),
-        Leg("leg_de", "Operator5", "D", "E", 150.0, 3, 70, 0.5, 0.01),
-        Leg("leg_ce", "Operator6", "C", "E", 100.0, 2, 90, 0.7, 0.015),
-        Leg("leg_heavy", "Operator7", "A", "F", 200.0, 5, 60, 0.3, 0.006),
-        Leg("leg_expensive", "Operator8", "A", "E", 100.0, 1, 300, 2.0, 0.03),
+        Leg("leg_ab", "Operator1", "A", "B", 100.0, 2, "air", 50, 0.5, 0.01),
+        Leg("leg_bc", "Operator2", "B", "C", 100.0, 3, "air", 40, 0.4, 0.008),
+        Leg("leg_ac", "Operator3", "A", "C", 50.0, 1, "air", 200, 1.0, 0.02),  # Direct but low capacity
+        Leg("leg_ad", "Operator4", "A", "D", 150.0, 4, "air", 80, 0.6, 0.012),
+        Leg("leg_de", "Operator5", "D", "E", 150.0, 3, "air", 70, 0.5, 0.01),
+        Leg("leg_ce", "Operator6", "C", "E", 100.0, 2, "air", 90, 0.7, 0.015),
+        Leg("leg_heavy", "Operator7", "A", "F", 200.0, 5, "air", 60, 0.3, 0.006),
+        Leg("leg_expensive", "Operator8", "A", "E", 100.0, 1, "air", 300, 2.0, 0.03),
     ]
 
 
@@ -67,7 +67,7 @@ class TestLeg:
     
     def test_leg_initialization(self):
         """Test leg initialization with valid parameters"""
-        leg = Leg("test_id", "TestOperator", "A", "B", 100.0, 5, 50, 0.5, 0.01)
+        leg = Leg("test_id", "TestOperator", "A", "B", 100.0, 5, "air", 50, 0.5, 0.01)
         
         assert leg.id == "test_id"
         assert leg.operator == "TestOperator"
@@ -75,13 +75,14 @@ class TestLeg:
         assert leg.to_location == "B"
         assert leg.max_weight == 100.0
         assert leg.time == 5
+        assert leg.leg_type == "air"  # New field
         assert leg.base_cost == 50
         assert leg.weight_factor == 0.5
         assert leg.value_factor == 0.01
     
     def test_cost_calculation(self):
         """Test cost calculation for a leg"""
-        leg = Leg("test_id", "TestOperator", "A", "B", 100.0, 5, 50, 0.5, 0.01)
+        leg = Leg("test_id", "TestOperator", "A", "B", 100.0, 5, "air", 50, 0.5, 0.01)
         
         # Test with moderate weight and value
         cost = leg.cost(30.0, 500)
@@ -94,14 +95,14 @@ class TestLeg:
     
     def test_cost_exceeds_max_weight(self):
         """Test cost calculation when parcel exceeds max weight"""
-        leg = Leg("test_id", "TestOperator", "A", "B", 50.0, 5, 50, 0.5, 0.01)
+        leg = Leg("test_id", "TestOperator", "A", "B", 50.0, 5, "air", 50, 0.5, 0.01)
         
         cost = leg.cost(60.0, 500)  # Weight exceeds max_weight
         assert cost == float('inf')
     
     def test_to_dict(self):
         """Test conversion to dictionary"""
-        leg = Leg("test_id", "TestOperator", "A", "B", 100.0, 5, 50, 0.5, 0.01)
+        leg = Leg("test_id", "TestOperator", "A", "B", 100.0, 5, "air", 50, 0.5, 0.01)
         
         leg_dict = leg.to_dict()
         assert leg_dict["id"] == "test_id"
@@ -110,6 +111,7 @@ class TestLeg:
         assert leg_dict["to"] == "B"
         assert leg_dict["maxWeight"] == 100.0
         assert leg_dict["time"] == 5
+        assert leg_dict["type"] == "air"  # New field
 
 
 # ============================================
@@ -145,6 +147,9 @@ class TestRoutingAlgorithm:
         
         # Indirect should be cheaper
         assert indirect_cost < direct_cost
+        
+        # Verify all legs are air type
+        assert all(leg.leg_type == "air" for leg in route)
     
     def test_find_cheapest_route_weight_constraint(self, routing_service_with_custom_legs, sample_legs):
         """Test routing with weight constraints"""
@@ -160,6 +165,7 @@ class TestRoutingAlgorithm:
         assert len(route) == 1
         assert route[0].id == "leg_heavy"
         assert route[0].max_weight >= parcel.weight
+        assert route[0].leg_type == "air"  # Verify air type
     
     def test_find_cheapest_route_no_path(self, routing_service_with_custom_legs):
         """Test when no route exists"""
@@ -187,6 +193,7 @@ class TestRoutingAlgorithm:
         assert route[0].id == "leg_ab"
         assert route[1].id == "leg_bc"
         assert all(leg.max_weight >= parcel.weight for leg in route)
+        assert all(leg.leg_type == "air" for leg in route)  # All air type
     
     def test_find_cheapest_route_three_legs(self, routing_service_with_custom_legs, sample_legs):
         """Test finding a route with three legs"""
@@ -194,16 +201,16 @@ class TestRoutingAlgorithm:
         # But with our current setup, A->D->E is cheapest for A->E
         # Let's test with a different scenario
         
-        # Add extra legs to create a three-leg scenario
+        # Add extra legs to create a three-leg scenario (all air type)
         extra_legs = [
-            Leg("leg_af", "Op9", "A", "F", 100.0, 2, 30, 0.3, 0.005),
-            Leg("leg_fg", "Op10", "F", "G", 100.0, 2, 30, 0.3, 0.005),
-            Leg("leg_ge", "Op11", "G", "E", 100.0, 2, 30, 0.3, 0.005),
+            Leg("leg_af", "Op9", "A", "F", 100.0, 2, "air", 30, 0.3, 0.005),
+            Leg("leg_fg", "Op10", "F", "G", 100.0, 2, "air", 30, 0.3, 0.005),
+            Leg("leg_ge", "Op11", "G", "E", 100.0, 2, "air", 30, 0.3, 0.005),
         ]
         
         all_legs = sample_legs + extra_legs
         
-        # Create location index
+        # Build location index
         location_index = {}
         for leg in all_legs:
             if leg.from_location not in location_index:
@@ -222,8 +229,8 @@ class TestRoutingAlgorithm:
                 
                 # Should find a route (could be 3 legs if that's cheapest)
                 assert route is not None
-                # At least one leg
-                assert len(route) >= 1
+                # Verify all legs are air type
+                assert all(leg.leg_type == "air" for leg in route)
 
 
 # ============================================
@@ -246,7 +253,6 @@ class TestRoutingServiceIntegration:
         # Verify all leg IDs are valid
         for leg_id in route.legs:
             assert isinstance(leg_id, LegId)
-            # assert leg_id.id in [leg.id for leg in sample_legs]
     
     def test_compute_route_invalid_parcel(self, routing_service_with_custom_legs):
         """Test route computation with invalid parcel"""
@@ -321,9 +327,10 @@ class TestRoutingServiceIntegration:
         assert len(route.legs) == 1
         assert route.legs[0].id == "leg_heavy"
         
-        # Verify the leg can handle the weight
+        # Verify the leg can handle the weight and is air type
         heavy_leg = next(l for l in sample_legs if l.id == "leg_heavy")
         assert heavy_leg.max_weight >= heavy_parcel.weight
+        assert heavy_leg.leg_type == "air"
 
 
 # ============================================
@@ -354,13 +361,13 @@ class TestRoutingEdgeCases:
     
     def test_route_with_cycle(self, routing_service_with_custom_legs):
         """Test that algorithm doesn't get stuck in cycles"""
-        # Create legs that form a cycle: A->B, B->C, C->A
+        # Create legs that form a cycle: A->B, B->C, C->A (all air type)
         # Add destination D from C
         cycle_legs = [
-            Leg("leg_ab", "Op1", "A", "B", 100.0, 2, 50, 0.5, 0.01),
-            Leg("leg_bc", "Op2", "B", "C", 100.0, 2, 50, 0.5, 0.01),
-            Leg("leg_ca", "Op3", "C", "A", 100.0, 2, 50, 0.5, 0.01),
-            Leg("leg_cd", "Op4", "C", "D", 100.0, 2, 50, 0.5, 0.01),
+            Leg("leg_ab", "Op1", "A", "B", 100.0, 2, "air", 50, 0.5, 0.01),
+            Leg("leg_bc", "Op2", "B", "C", 100.0, 2, "air", 50, 0.5, 0.01),
+            Leg("leg_ca", "Op3", "C", "A", 100.0, 2, "air", 50, 0.5, 0.01),
+            Leg("leg_cd", "Op4", "C", "D", 100.0, 2, "air", 50, 0.5, 0.01),
         ]
         
         # Build location index
@@ -379,13 +386,15 @@ class TestRoutingEdgeCases:
                 
                 # Should find a route A->B->C->D (not get stuck in A->B->C->A cycle)
                 assert route is not None
+                # Verify all legs in route are air type
+                # (We can't directly check route.legs without extra method to get actual leg objects)
     
     def test_multiple_routes_same_cost(self, routing_service_with_custom_legs):
         """Test when multiple routes have the same cost"""
-        # Create two routes with identical cost
+        # Create two routes with identical cost (both air type)
         equal_cost_legs = [
-            Leg("leg1", "Op1", "A", "B", 100.0, 2, 50, 0.5, 0.01),
-            Leg("leg2", "Op2", "A", "B", 100.0, 3, 40, 0.6, 0.01),  # Different but same cost for weight=20, value=100
+            Leg("leg1", "Op1", "A", "B", 100.0, 2, "air", 50, 0.5, 0.01),
+            Leg("leg2", "Op2", "A", "B", 100.0, 3, "air", 40, 0.6, 0.01),
         ]
         
         # Build location index
@@ -422,8 +431,8 @@ class TestRoutingPerformance:
     """Performance tests for routing algorithm"""
     
     def test_large_network_performance(self):
-        """Test routing performance with a large network"""
-        # Create a larger network (100 legs)
+        """Test routing performance with a large network (all air type)"""
+        # Create a larger network (100 legs) - all air type
         large_network = []
         for i in range(10):  # 10 locations
             for j in range(10):
@@ -435,6 +444,7 @@ class TestRoutingPerformance:
                         f"City_{j}",
                         100.0,
                         abs(i - j) * 2,
+                        "air",  # All air type
                         50 + abs(i - j) * 10,
                         0.5,
                         0.01
