@@ -36,12 +36,10 @@ class RouterClient:
 
             if response.status_code == 400:
                 # No route found
-                print(f"No route from {from_loc} to {to_loc}")
                 return None
 
             response.raise_for_status()
             data = response.json()
-            print(f"Response is {data}")
 
             return Route(
                 leg_ids=data["legs"],
