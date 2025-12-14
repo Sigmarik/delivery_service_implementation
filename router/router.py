@@ -202,7 +202,7 @@ class RoutingService:
                 parcel.value
             )
             
-            if not route:
+            if route is None:
                 return None
             
             # Calculate total cost and time
