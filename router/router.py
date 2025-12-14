@@ -236,6 +236,8 @@ class RoutingService:
         # Priority queue: (total_cost, current_location, path_legs)
         pq = []
         heapq.heappush(pq, (0, start, []))
+
+        if (start == end): return []
         
         # Keep track of minimum costs to reach each location
         min_costs = {start: 0}

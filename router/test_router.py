@@ -166,6 +166,19 @@ class TestRoutingAlgorithm:
         assert route[0].id == "leg_heavy"
         assert route[0].max_weight >= parcel.weight
         assert route[0].leg_type == "air"  # Verify air type
+
+    def test_find_cheapest_route_to_itself(self, routing_service_with_custom_legs, sample_legs):
+        """Test routing to the same location"""
+        # Create a very heavy parcel (180kg) that can only go through specific legs
+        parcel = ParcelDescription("A", "A", 180.0, 2000)
+        
+        route = routing_service_with_custom_legs._find_cheapest_route(
+            "A", "A", parcel.weight, parcel.value
+        )
+        
+        assert route is not None
+        # Should only use leg_heavy which supports 200kg
+        assert len(route) == 0
     
     def test_find_cheapest_route_no_path(self, routing_service_with_custom_legs):
         """Test when no route exists"""
