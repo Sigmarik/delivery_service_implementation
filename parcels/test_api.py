@@ -7,6 +7,7 @@ import hashlib
 import uuid
 from fastapi.testclient import TestClient
 from main import app, registry
+from services import RouterStubClient
 
 
 # Test client
@@ -15,7 +16,9 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def reset_registry():
-    """Clear in-memory storage between tests."""
+    """Clear in-memory storage between tests and use stub router."""
+    # Replace router with stub for testing
+    registry.router = RouterStubClient()
     registry._parcels.clear()
     yield
 

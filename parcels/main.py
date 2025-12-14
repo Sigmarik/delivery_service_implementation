@@ -15,7 +15,7 @@ from models import (
 )
 from domain import Item
 from storage import ParcelRegistry
-from services import RouterStubClient
+from services import RouterClient
 
 
 # Initialize FastAPI app
@@ -26,7 +26,7 @@ app = FastAPI(
 )
 
 # Initialize services
-router_client = RouterStubClient()
+router_client = RouterClient()
 registry = ParcelRegistry(router_client)
 
 

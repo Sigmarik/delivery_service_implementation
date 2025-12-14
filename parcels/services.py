@@ -1,10 +1,60 @@
 """
 Router client for parcel management.
-Contains RouterStubClient for mock routing.
+Contains RouterClient for real routing and RouterStubClient for mock routing.
 """
 
+import requests
 from typing import Optional, Tuple
 from domain import Route
+
+
+class RouterClient:
+    """
+    Real Router service client.
+    Communicates with Router service via HTTP on localhost:5000.
+    """
+
+    def __init__(self, base_url: str = "http://localhost:5000"):
+        self.base_url = base_url
+
+    def get_route(self, from_loc: str, to_loc: str, weight: int, value: int) -> Optional[Route]:
+        """
+        Get a route between two locations from Router service.
+        Returns None if no route exists or if service is unavailable.
+        """
+        try:
+            response = requests.post(
+                f"{self.base_url}/route",
+                json={
+                    "from": from_loc,
+                    "to": to_loc,
+                    "weight": weight,
+                    "value": value
+                },
+                timeout=5
+            )
+
+            if response.status_code == 400:
+                # No route found
+                print(f"No route from {from_loc} to {to_loc}")
+                return None
+
+            response.raise_for_status()
+            data = response.json()
+            print(f"Response is {data}")
+
+            return Route(
+                leg_ids=data["legs"],
+                cost=data["cost"],
+                time=data["time"]
+            )
+
+        except requests.exceptions.RequestException:
+            # Service unavailable or network error
+            return None
+        except (KeyError, ValueError):
+            # Invalid response format
+            return None
 
 
 class RouterStubClient:
