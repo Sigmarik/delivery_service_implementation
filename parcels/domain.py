@@ -90,8 +90,6 @@ class Parcel:
     State is derived from history, not stored explicitly.
     """
     public_id: str  # Public identifier (hash) provided by frontend
-    from_location: str
-    to_location: str
     length: int
     width: int
     height: int
@@ -99,3 +97,24 @@ class Parcel:
     items: List[Item]
     route: Route
     history: ParcelHistory
+
+    def get_next_leg_id(self) -> str | None:
+        """
+        Determine the next expected leg based on history.
+        Returns None if parcel is in transit or has completed all legs.
+        """
+        # If last event is a departure, parcel is currently in transit
+        if self.history.events and isinstance(self.history.events[-1], DepartureEvent):
+            return None
+
+        # Count departure events to determine current leg index
+        departure_count = sum(
+            1 for event in self.history.events
+            if isinstance(event, DepartureEvent)
+        )
+
+        # Check if all legs have been completed
+        if departure_count >= len(self.route.leg_ids):
+            return None
+
+        return self.route.leg_ids[departure_count]

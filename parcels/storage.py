@@ -4,7 +4,7 @@ Note: Not thread-safe. For production, add proper locking mechanisms.
 """
 
 from typing import Optional, List, Tuple
-from domain import Parcel, ParcelHistory, DepartureEvent, Item
+from domain import Parcel, ParcelHistory, Item
 
 
 class ParcelRegistry:
@@ -43,8 +43,6 @@ class ParcelRegistry:
         # Create parcel with empty history
         parcel = Parcel(
             public_id=public_id,
-            from_location=from_location,
-            to_location=to_location,
             length=length,
             width=width,
             height=height,
@@ -63,36 +61,15 @@ class ParcelRegistry:
         """Find a parcel by its public_id."""
         return self._parcels.get(public_id)
 
-    def get_all_parcels(self) -> List[Parcel]:
-        """Return all registered parcels."""
-        return list(self._parcels.values())
-
     def get_parcels_for_leg(self, leg_id: str) -> List[str]:
         """
         Get list of parcel IDs awaiting transport for a specific leg.
         Returns list of public IDs.
         """
         result = []
-        for parcel in self.get_all_parcels():
-            next_leg_id = self.get_next_leg_id(parcel)
+        for parcel in self._parcels.values():
+            next_leg_id = parcel.get_next_leg_id()
             if next_leg_id == leg_id:
                 result.append(parcel.public_id)
 
         return result
-
-    def get_next_leg_id(self, parcel: Parcel) -> Optional[str]:
-        """
-        Determine the next expected leg for a parcel based on its history.
-        Returns None if parcel has completed all legs.
-        """
-        # Count departure events to determine current leg index
-        departure_count = sum(
-            1 for event in parcel.history.events
-            if isinstance(event, DepartureEvent)
-        )
-
-        # Check if all legs have been completed
-        if departure_count >= len(parcel.route.leg_ids):
-            return None
-
-        return parcel.route.leg_ids[departure_count]

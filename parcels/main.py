@@ -208,7 +208,7 @@ def take_parcel(parcelId: str, take_input: TakeParcelInput):
         raise HTTPException(status_code=404, detail="Parcel not found")
 
     # Validate that leg_id matches the next expected leg
-    expected_leg_id = registry.get_next_leg_id(parcel)
+    expected_leg_id = parcel.get_next_leg_id()
     if expected_leg_id != take_input.leg.id:
         raise HTTPException(
             status_code=400,
