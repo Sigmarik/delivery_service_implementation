@@ -432,7 +432,7 @@
                             historyEntry.className = 'history-entry';
                             
                             const date = new Date(entry.timestamp * 1000);
-                            const formattedDate = date.toLocaleString();
+                            const formattedDate = date.toLocaleString('ru');
                             
                             historyEntry.innerHTML = `
                                 <div class="history-timestamp">${formattedDate}</div>

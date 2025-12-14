@@ -59,7 +59,7 @@ class DepartureEvent(ParcelEvent):
 
     def to_message(self) -> str:
         """Convert event to human-readable message."""
-        return f"Departed on leg {self.leg_id}"
+        return f"Departed via {self.leg_id}"
 
 
 @dataclass
