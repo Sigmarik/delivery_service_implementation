@@ -7,6 +7,7 @@ Matches the OpenAPI specification in context/openapi.yaml
 import hashlib
 from fastapi import FastAPI, HTTPException
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 from models import (
     ParcelCreationInfo, DeliveryInfo, PickupInput, GetDeliveryStatusInput,
@@ -23,6 +24,16 @@ app = FastAPI(
     title="Parcel Management Service",
     version="1.0.0",
     description="Microservice for managing parcel delivery lifecycle"
+)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Initialize services

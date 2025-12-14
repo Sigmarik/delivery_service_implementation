@@ -4,10 +4,12 @@ Implements the same endpoints as the FastAPI service but with simple mock respon
 """
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import hashlib
 import time
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # In-memory storage for mock parcels
 parcels_db = {}
