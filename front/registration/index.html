@@ -793,11 +793,13 @@
                 weight,
                 items
             };
+
+            let originalText = 'Failed';
             
             try {
                 // Show loading state
                 const submitBtn = registerForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+                originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
                 submitBtn.disabled = true;
                 
@@ -876,10 +878,12 @@
             
             const privateParcelId = document.getElementById('pickupPrivateParcelId').value;
             
+            let originalText = 'Failed';
+
             try {
                 // Show loading state
                 const submitBtn = pickupForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+                originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                 submitBtn.disabled = true;
                 
