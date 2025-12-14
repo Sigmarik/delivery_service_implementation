@@ -1,15 +1,15 @@
 """
 FastAPI application for Parcel Management Service.
 Implements 6 endpoints (no /route endpoint - that's Router service's responsibility).
+Matches the OpenAPI specification in context/openapi.yaml
 """
 
 import hashlib
-import uuid
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from typing import List
 
 from models import (
-    ParcelCreationInfo, DeliveryInfo, PickupInput,
+    ParcelCreationInfo, DeliveryInfo, PickupInput, GetDeliveryStatusInput,
     ParcelStatusHistory, HistoryEntry, ParcelList,
     TakeParcelInput, PutParcelInput
 )
@@ -63,21 +63,19 @@ def register_parcel(parcel_info: ParcelCreationInfo):
     """
     Register a new parcel for delivery.
 
-    Returns delivery cost, time, and pickup ID hash on success.
+    The publicId is generated and hashed by the frontend before being sent to this service.
+
+    Returns delivery cost and time on success.
 
     **Error Responses:**
     - **400 Bad Request**: No valid route found for the given origin and destination
     """
-    # Generate UUID and hash it
-    pickup_uuid = str(uuid.uuid4())
-    pickup_id_hash = hashlib.sha256(pickup_uuid.encode()).hexdigest()
-
     # Convert ItemInfo to Item domain objects
     items = [Item(name=item.name, value=item.value) for item in parcel_info.items]
 
-    # Register parcel via service
+    # Register parcel via service using the provided publicId
     result = parcel_service.register_parcel(
-        pickup_id_hash=pickup_id_hash,
+        public_id=parcel_info.publicId,
         from_location=parcel_info.from_location,
         to_location=parcel_info.to_location,
         length=parcel_info.length,
@@ -97,8 +95,7 @@ def register_parcel(parcel_info: ParcelCreationInfo):
 
     return DeliveryInfo(
         cost=cost,
-        time=time,
-        pickupIdHash=pickup_id_hash
+        time=time
     )
 
 
@@ -114,10 +111,14 @@ def pickup_parcel(pickup_input: PickupInput):
     """
     Record that a parcel has been picked up at its final destination.
 
+    The privateParcelId is the unhashed identifier. It will be hashed to look up the parcel.
+
     **Error Responses:**
     - **404 Not Found**: Parcel not found
     """
-    success = parcel_service.pickup_parcel(pickup_input.pickupIdHash)
+    # Hash the private ID to get the public ID for lookup
+    public_id = hashlib.sha256(pickup_input.privateParcelId.encode()).hexdigest()
+    success = parcel_service.pickup_parcel(public_id)
 
     if not success:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -125,7 +126,7 @@ def pickup_parcel(pickup_input: PickupInput):
     return True
 
 
-@app.get(
+@app.post(
     "/track",
     response_model=ParcelStatusHistory,
     status_code=200,
@@ -133,14 +134,20 @@ def pickup_parcel(pickup_input: PickupInput):
         404: ERROR_RESPONSES[404]
     }
 )
-def track_parcel(pickupIdHash: str = Query(..., description="Parcel identifier")):
+def track_parcel(track_input: GetDeliveryStatusInput):
     """
     Get tracking history and status for a parcel.
+
+    The privateParcelId is the unhashed identifier. It will be hashed to look up the parcel.
+
+    Note: Changed to POST to properly support request body (OpenAPI spec shows GET but has requestBody).
 
     **Error Responses:**
     - **404 Not Found**: Parcel not found
     """
-    result = parcel_service.track_parcel(pickupIdHash)
+    # Hash the private ID to get the public ID for lookup
+    public_id = hashlib.sha256(track_input.privateParcelId.encode()).hexdigest()
+    result = parcel_service.track_parcel(public_id)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -194,7 +201,7 @@ def take_parcel(parcelId: str, take_input: TakeParcelInput):
     - **400 Bad Request**: Leg ID does not match the next expected leg for this parcel
     - **404 Not Found**: Parcel not found
     """
-    result = parcel_service.record_departure(parcelId, take_input.legId)
+    result = parcel_service.record_departure(parcelId, take_input.leg.id)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -202,7 +209,7 @@ def take_parcel(parcelId: str, take_input: TakeParcelInput):
     if result is False:
         raise HTTPException(
             status_code=400,
-            detail=f"Leg {take_input.legId} does not match the next expected leg for this parcel"
+            detail=f"Leg {take_input.leg.id} does not match the next expected leg for this parcel"
         )
 
     return True

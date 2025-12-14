@@ -1,5 +1,6 @@
 """
 Pydantic models for API request and response validation.
+Matches the OpenAPI specification in context/openapi.yaml
 """
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -16,11 +17,12 @@ class ParcelCreationInfo(BaseModel):
     """Request model for parcel registration."""
     model_config = ConfigDict(populate_by_name=True)
 
-    items: List[ItemInfo] = Field(alias="items")
+    items: List[ItemInfo]
+    publicId: str  # Generated and hashed by frontend
     length: int
     width: int
     height: int
-    weight: float
+    weight: int  # Integer per OpenAPI spec
 
     # Use Field with alias to match the exact field names from OpenAPI spec
     from_location: str = Field(alias="from")
@@ -31,12 +33,16 @@ class DeliveryInfo(BaseModel):
     """Response model for successful parcel registration."""
     cost: int
     time: int
-    pickupIdHash: str
 
 
 class PickupInput(BaseModel):
     """Request model for pickup endpoint."""
-    pickupIdHash: str
+    privateParcelId: str
+
+
+class GetDeliveryStatusInput(BaseModel):
+    """Request model for tracking endpoint."""
+    privateParcelId: str
 
 
 class HistoryEntry(BaseModel):
@@ -56,9 +62,14 @@ class ParcelList(BaseModel):
     parcelIds: List[str]
 
 
+class LegId(BaseModel):
+    """Identifier for a delivery leg."""
+    id: str
+
+
 class TakeParcelInput(BaseModel):
     """Request model for take (departure) endpoint."""
-    legId: str
+    leg: LegId
 
 
 class PutParcelInput(BaseModel):

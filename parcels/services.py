@@ -21,7 +21,7 @@ class RouterStubClient:
     def __init__(self):
         self._routes = self._create_predefined_routes()
 
-    def get_route(self, from_loc: str, to_loc: str, weight: float, value: int) -> Optional[Route]:
+    def get_route(self, from_loc: str, to_loc: str, weight: int, value: int) -> Optional[Route]:
         """
         Get a route between two locations.
         Returns None if no route exists (simulates routing failure).
@@ -42,7 +42,7 @@ class RouterStubClient:
             time=base_route.time
         )
 
-    def _calculate_cost(self, base_cost: int, weight: float, value: int) -> int:
+    def _calculate_cost(self, base_cost: int, weight: int, value: int) -> int:
         """Calculate total cost based on base cost, weight, and value."""
         return int(base_cost + (weight * 10) + (value * 0.01))
 
@@ -73,13 +73,13 @@ class ParcelService:
 
     def register_parcel(
         self,
-        pickup_id_hash: str,
+        public_id: str,
         from_location: str,
         to_location: str,
         length: int,
         width: int,
         height: int,
-        weight: float,
+        weight: int,
         items: List[Item]
     ) -> Optional[Tuple[int, int]]:
         """
@@ -96,7 +96,7 @@ class ParcelService:
 
         # Create parcel with empty history
         parcel = Parcel(
-            pickup_id_hash=pickup_id_hash,
+            public_id=public_id,
             from_location=from_location,
             to_location=to_location,
             length=length,
@@ -113,12 +113,12 @@ class ParcelService:
 
         return (route.cost, route.time)
 
-    def pickup_parcel(self, pickup_id_hash: str) -> bool:
+    def pickup_parcel(self, private_parcel_id: str) -> bool:
         """
         Record pickup event for a parcel.
         Returns True if successful, False if parcel not found.
         """
-        parcel = self.registry.find_by_id(pickup_id_hash)
+        parcel = self.registry.find_by_id(private_parcel_id)
         if parcel is None:
             return False
 
@@ -128,13 +128,13 @@ class ParcelService:
 
         return True
 
-    def track_parcel(self, pickup_id_hash: str) -> Optional[Tuple[int, List[Tuple[int, str]]]]:
+    def track_parcel(self, private_parcel_id: str) -> Optional[Tuple[int, List[Tuple[int, str]]]]:
         """
         Get parcel tracking information.
         Returns (total_stops, history_entries) where history_entries is list of (timestamp, message).
         Returns None if parcel not found.
         """
-        parcel = self.registry.find_by_id(pickup_id_hash)
+        parcel = self.registry.find_by_id(private_parcel_id)
         if parcel is None:
             return None
 
@@ -151,22 +151,22 @@ class ParcelService:
     def get_parcels_for_leg(self, leg_id: str) -> List[str]:
         """
         Get list of parcel IDs awaiting transport for a specific leg.
-        Returns list of pickup_id_hash values.
+        Returns list of public IDs.
         """
         result = []
         for parcel in self.registry.get_all_parcels():
             next_leg_id = self._get_next_leg_id(parcel)
             if next_leg_id == leg_id:
-                result.append(parcel.pickup_id_hash)
+                result.append(parcel.public_id)
 
         return result
 
-    def record_departure(self, pickup_id_hash: str, leg_id: str) -> Optional[bool]:
+    def record_departure(self, parcel_id: str, leg_id: str) -> Optional[bool]:
         """
         Record departure event for a parcel on a specific leg.
         Returns True if successful, None if parcel not found, False if leg validation fails.
         """
-        parcel = self.registry.find_by_id(pickup_id_hash)
+        parcel = self.registry.find_by_id(parcel_id)
         if parcel is None:
             return None
 
@@ -181,12 +181,12 @@ class ParcelService:
 
         return True
 
-    def record_arrival(self, pickup_id_hash: str, location: str) -> bool:
+    def record_arrival(self, parcel_id: str, location: str) -> bool:
         """
         Record arrival event for a parcel at a location.
         Returns True if successful, False if parcel not found.
         """
-        parcel = self.registry.find_by_id(pickup_id_hash)
+        parcel = self.registry.find_by_id(parcel_id)
         if parcel is None:
             return False
 

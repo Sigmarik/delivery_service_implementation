@@ -10,19 +10,19 @@ from domain import Parcel
 class ParcelRegistry:
     """
     In-memory registry for parcels.
-    Uses pickup_id_hash as the single index (serves as both public and private identifier).
+    Uses public_id (provided by frontend) as the index.
     """
 
     def __init__(self):
         self._parcels: dict[str, Parcel] = {}
 
     def register_parcel(self, parcel: Parcel) -> None:
-        """Store a parcel by its pickup_id_hash."""
-        self._parcels[parcel.pickup_id_hash] = parcel
+        """Store a parcel by its public_id."""
+        self._parcels[parcel.public_id] = parcel
 
-    def find_by_id(self, pickup_id_hash: str) -> Optional[Parcel]:
-        """Find a parcel by its pickup_id_hash."""
-        return self._parcels.get(pickup_id_hash)
+    def find_by_id(self, public_id: str) -> Optional[Parcel]:
+        """Find a parcel by its public_id."""
+        return self._parcels.get(public_id)
 
     def get_all_parcels(self) -> List[Parcel]:
         """Return all registered parcels."""

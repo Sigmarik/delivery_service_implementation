@@ -59,13 +59,13 @@ class Parcel:
     Represents a parcel in the delivery system.
     State is derived from history, not stored explicitly.
     """
-    pickup_id_hash: str  # SHA256 hash of UUID - serves as both public and private ID
+    public_id: str  # Public identifier (hash) provided by frontend
     from_location: str
     to_location: str
     length: int
     width: int
     height: int
-    weight: float
+    weight: int
     items: List[Item]
     route: Route
     history: ParcelHistory
