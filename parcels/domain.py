@@ -1,8 +1,8 @@
 """
 Domain entities for the Parcel Management Service.
-All classes are data-only with no business logic methods.
 """
 
+import time
 from dataclasses import dataclass, field
 from abc import ABC
 from typing import List
@@ -51,6 +51,21 @@ class DepartureEvent(ParcelEvent):
 class ParcelHistory:
     """Maintains ordered list of events for a parcel."""
     events: List[ParcelEvent] = field(default_factory=list)
+
+    def departure(self, leg_id: str) -> None:
+        """Record a departure event for a specific leg."""
+        event = DepartureEvent(timestamp=int(time.time()), leg_id=leg_id)
+        self.events.append(event)
+
+    def arrival(self, location: str) -> None:
+        """Record an arrival event at a location."""
+        event = ArrivalEvent(timestamp=int(time.time()), to=location)
+        self.events.append(event)
+
+    def pickup(self) -> None:
+        """Record a pickup event at final destination."""
+        event = PickupEvent(timestamp=int(time.time()))
+        self.events.append(event)
 
 
 @dataclass

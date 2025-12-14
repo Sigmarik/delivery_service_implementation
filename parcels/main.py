@@ -118,11 +118,12 @@ def pickup_parcel(pickup_input: PickupInput):
     """
     # Hash the private ID to get the public ID for lookup
     public_id = hashlib.sha256(pickup_input.privateParcelId.encode()).hexdigest()
-    success = registry.pickup_parcel(public_id)
+    parcel = registry.find_by_id(public_id)
 
-    if not success:
+    if parcel is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
 
+    parcel.history.pickup()
     return True
 
 
@@ -201,17 +202,20 @@ def take_parcel(parcelId: str, take_input: TakeParcelInput):
     - **400 Bad Request**: Leg ID does not match the next expected leg for this parcel
     - **404 Not Found**: Parcel not found
     """
-    result = registry.record_departure(parcelId, take_input.leg.id)
+    parcel = registry.find_by_id(parcelId)
 
-    if result is None:
+    if parcel is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
 
-    if result is False:
+    # Validate that leg_id matches the next expected leg
+    expected_leg_id = registry.get_next_leg_id(parcel)
+    if expected_leg_id != take_input.leg.id:
         raise HTTPException(
             status_code=400,
             detail=f"Leg {take_input.leg.id} does not match the next expected leg for this parcel"
         )
 
+    parcel.history.departure(take_input.leg.id)
     return True
 
 
@@ -230,11 +234,12 @@ def put_parcel(parcelId: str, put_input: PutParcelInput):
     **Error Responses:**
     - **404 Not Found**: Parcel not found
     """
-    success = registry.record_arrival(parcelId, put_input.location)
+    parcel = registry.find_by_id(parcelId)
 
-    if not success:
+    if parcel is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
 
+    parcel.history.arrival(put_input.location)
     return True
 
 

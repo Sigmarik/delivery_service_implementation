@@ -3,10 +3,9 @@ In-memory storage for parcels with business logic.
 Note: Not thread-safe. For production, add proper locking mechanisms.
 """
 
-import time
 from typing import Optional, List, Tuple
 from domain import (
-    Parcel, Route, ParcelHistory, ParcelEvent,
+    Parcel, ParcelHistory, ParcelEvent,
     PickupEvent, ArrivalEvent, DepartureEvent, Item
 )
 
@@ -71,21 +70,6 @@ class ParcelRegistry:
         """Return all registered parcels."""
         return list(self._parcels.values())
 
-    def pickup_parcel(self, private_parcel_id: str) -> bool:
-        """
-        Record pickup event for a parcel.
-        Returns True if successful, False if parcel not found.
-        """
-        parcel = self.find_by_id(private_parcel_id)
-        if parcel is None:
-            return False
-
-        # Add pickup event
-        event = PickupEvent(timestamp=int(time.time()))
-        parcel.history.events.append(event)
-
-        return True
-
     def track_parcel(self, private_parcel_id: str) -> Optional[Tuple[int, List[Tuple[int, str]]]]:
         """
         Get parcel tracking information.
@@ -113,48 +97,13 @@ class ParcelRegistry:
         """
         result = []
         for parcel in self.get_all_parcels():
-            next_leg_id = self._get_next_leg_id(parcel)
+            next_leg_id = self.get_next_leg_id(parcel)
             if next_leg_id == leg_id:
                 result.append(parcel.public_id)
 
         return result
 
-    def record_departure(self, parcel_id: str, leg_id: str) -> Optional[bool]:
-        """
-        Record departure event for a parcel on a specific leg.
-        Returns True if successful, None if parcel not found, False if leg validation fails.
-        """
-        parcel = self.find_by_id(parcel_id)
-        if parcel is None:
-            return None
-
-        # Validate that leg_id matches the next expected leg
-        expected_leg_id = self._get_next_leg_id(parcel)
-        if expected_leg_id != leg_id:
-            return False
-
-        # Add departure event
-        event = DepartureEvent(timestamp=int(time.time()), leg_id=leg_id)
-        parcel.history.events.append(event)
-
-        return True
-
-    def record_arrival(self, parcel_id: str, location: str) -> bool:
-        """
-        Record arrival event for a parcel at a location.
-        Returns True if successful, False if parcel not found.
-        """
-        parcel = self.find_by_id(parcel_id)
-        if parcel is None:
-            return False
-
-        # Add arrival event
-        event = ArrivalEvent(timestamp=int(time.time()), to=location)
-        parcel.history.events.append(event)
-
-        return True
-
-    def _get_next_leg_id(self, parcel: Parcel) -> Optional[str]:
+    def get_next_leg_id(self, parcel: Parcel) -> Optional[str]:
         """
         Determine the next expected leg for a parcel based on its history.
         Returns None if parcel has completed all legs.
