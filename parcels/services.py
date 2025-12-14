@@ -42,7 +42,7 @@ class RouterClient:
             data = response.json()
 
             return Route(
-                leg_ids=data["legs"],
+                leg_ids=[leg['id'] for leg in data["legs"]],
                 cost=data["cost"],
                 time=data["time"]
             )

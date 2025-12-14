@@ -103,8 +103,10 @@ class Parcel:
         Determine the next expected leg based on history.
         Returns None if parcel is in transit or has completed all legs.
         """
+        print(f"Getting on of legs {self.route.leg_ids}")
         # If last event is a departure, parcel is currently in transit
         if self.history.events and isinstance(self.history.events[-1], DepartureEvent):
+            print(f"Parcel is in transit")
             return None
 
         # Count departure events to determine current leg index
@@ -112,9 +114,11 @@ class Parcel:
             1 for event in self.history.events
             if isinstance(event, DepartureEvent)
         )
+        print(f"Parcel departed {departure_count} times")
 
         # Check if all legs have been completed
         if departure_count >= len(self.route.leg_ids):
+            print(f"Parcel arrived at destination")
             return None
-
+        print(f"Parcel is ready to travel via {self.route.leg_ids[departure_count]}")
         return self.route.leg_ids[departure_count]

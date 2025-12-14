@@ -51,6 +51,8 @@ class ParcelRegistry:
             route=route,
             history=ParcelHistory()
         )
+        parcel.history.arrival(from_location)
+        print(f"Legs are {route.leg_ids}")
 
         # Store parcel
         self._parcels[parcel.public_id] = parcel
