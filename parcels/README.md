@@ -15,8 +15,8 @@ A FastAPI-based microservice prototype for managing parcel delivery lifecycle. T
 The service follows a clean architecture with clear separation of concerns:
 
 - **domain.py**: Data-only domain entities (Parcel, Route, Events)
-- **storage.py**: In-memory parcel registry
-- **services.py**: Business logic layer (ParcelService) and Router stub
+- **storage.py**: Parcel registry with business logic (ParcelRegistry)
+- **services.py**: Router stub client (RouterStubClient)
 - **models.py**: Pydantic models for API validation
 - **main.py**: FastAPI application with endpoints
 - **test_api.py**: Integration tests
@@ -181,7 +181,7 @@ All tests should pass:
 The `pickup_id_hash` serves as both public and private identifier. It's a SHA256 hash of a randomly generated UUID4.
 
 ### Data-Only Domain
-Domain entities (Parcel, Route, etc.) contain no business logic. All operations are in the ParcelService layer.
+Domain entities (Parcel, Route, etc.) contain no business logic. All operations are in the ParcelRegistry layer.
 
 ### Derived State
 Parcel state is derived from event history rather than stored explicitly. The last event type determines the current state.

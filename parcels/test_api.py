@@ -6,8 +6,7 @@ import pytest
 import hashlib
 import uuid
 from fastapi.testclient import TestClient
-from main import app
-from storage import registry
+from main import app, registry
 
 
 # Test client

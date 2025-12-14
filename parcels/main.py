@@ -14,8 +14,8 @@ from models import (
     TakeParcelInput, PutParcelInput
 )
 from domain import Item
-from storage import registry
-from services import ParcelService, RouterStubClient
+from storage import ParcelRegistry
+from services import RouterStubClient
 
 
 # Initialize FastAPI app
@@ -27,7 +27,7 @@ app = FastAPI(
 
 # Initialize services
 router_client = RouterStubClient()
-parcel_service = ParcelService(registry, router_client)
+registry = ParcelRegistry(router_client)
 
 
 # Error response examples for documentation
@@ -73,8 +73,8 @@ def register_parcel(parcel_info: ParcelCreationInfo):
     # Convert ItemInfo to Item domain objects
     items = [Item(name=item.name, value=item.value) for item in parcel_info.items]
 
-    # Register parcel via service using the provided publicId
-    result = parcel_service.register_parcel(
+    # Register parcel via registry using the provided publicId
+    result = registry.register_parcel(
         public_id=parcel_info.publicId,
         from_location=parcel_info.from_location,
         to_location=parcel_info.to_location,
@@ -118,7 +118,7 @@ def pickup_parcel(pickup_input: PickupInput):
     """
     # Hash the private ID to get the public ID for lookup
     public_id = hashlib.sha256(pickup_input.privateParcelId.encode()).hexdigest()
-    success = parcel_service.pickup_parcel(public_id)
+    success = registry.pickup_parcel(public_id)
 
     if not success:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -147,7 +147,7 @@ def track_parcel(track_input: GetDeliveryStatusInput):
     """
     # Hash the private ID to get the public ID for lookup
     public_id = hashlib.sha256(track_input.privateParcelId.encode()).hexdigest()
-    result = parcel_service.track_parcel(public_id)
+    result = registry.track_parcel(public_id)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -172,7 +172,7 @@ def get_parcels_for_leg(legId: str):
     Get list of parcels awaiting transport for a specific leg.
     Returns list of parcel IDs (pickup_id_hash values).
     """
-    parcel_ids = parcel_service.get_parcels_for_leg(legId)
+    parcel_ids = registry.get_parcels_for_leg(legId)
 
     return ParcelList(parcelIds=parcel_ids)
 
@@ -201,7 +201,7 @@ def take_parcel(parcelId: str, take_input: TakeParcelInput):
     - **400 Bad Request**: Leg ID does not match the next expected leg for this parcel
     - **404 Not Found**: Parcel not found
     """
-    result = parcel_service.record_departure(parcelId, take_input.leg.id)
+    result = registry.record_departure(parcelId, take_input.leg.id)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -230,7 +230,7 @@ def put_parcel(parcelId: str, put_input: PutParcelInput):
     **Error Responses:**
     - **404 Not Found**: Parcel not found
     """
-    success = parcel_service.record_arrival(parcelId, put_input.location)
+    success = registry.record_arrival(parcelId, put_input.location)
 
     if not success:
         raise HTTPException(status_code=404, detail="Parcel not found")
