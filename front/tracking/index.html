@@ -401,11 +401,13 @@
                 alert('Please enter your Private Parcel ID');
                 return;
             }
+
+            let originalText = 'Failed';
             
             try {
                 // Show loading state
                 const submitBtn = trackForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+                originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Tracking...';
                 submitBtn.disabled = true;
                 

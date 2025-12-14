@@ -496,11 +496,13 @@
                 alert('Please enter a Leg ID');
                 return;
             }
+
+            let originalText = 'Failed';
             
             try {
                 // Show loading state
                 const submitBtn = legForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+                originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
                 submitBtn.disabled = true;
                 
@@ -601,11 +603,13 @@
                 alert('Please fill in all required fields');
                 return;
             }
+
+            let originalText = 'Failed';
             
             try {
                 // Show loading state
                 const submitBtn = takeForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+                originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                 submitBtn.disabled = true;
                 
@@ -659,11 +663,13 @@
                 alert('Please fill in all required fields');
                 return;
             }
+
+            let originalText = 'Failed';
             
             try {
                 // Show loading state
                 const submitBtn = putForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
+                originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                 submitBtn.disabled = true;
                 
