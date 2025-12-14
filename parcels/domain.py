@@ -28,11 +28,18 @@ class ParcelEvent(ABC):
     """Base class for parcel events."""
     timestamp: int  # Unix epoch timestamp
 
+    def to_message(self) -> str:
+        """Convert event to human-readable message."""
+        raise NotImplementedError("Subclasses must implement to_message()")
+
 
 @dataclass(frozen=True)
 class PickupEvent(ParcelEvent):
     """Event recorded when parcel is picked up at final destination."""
-    pass
+
+    def to_message(self) -> str:
+        """Convert event to human-readable message."""
+        return "Parcel picked up at final destination"
 
 
 @dataclass(frozen=True)
@@ -40,11 +47,19 @@ class ArrivalEvent(ParcelEvent):
     """Event recorded when parcel arrives at a location."""
     to: str  # Arrival location
 
+    def to_message(self) -> str:
+        """Convert event to human-readable message."""
+        return f"Arrived at {self.to}"
+
 
 @dataclass(frozen=True)
 class DepartureEvent(ParcelEvent):
     """Event recorded when parcel departs on a leg."""
     leg_id: str  # Opaque leg identifier
+
+    def to_message(self) -> str:
+        """Convert event to human-readable message."""
+        return f"Departed on leg {self.leg_id}"
 
 
 @dataclass

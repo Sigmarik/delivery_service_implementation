@@ -4,10 +4,7 @@ Note: Not thread-safe. For production, add proper locking mechanisms.
 """
 
 from typing import Optional, List, Tuple
-from domain import (
-    Parcel, ParcelHistory, ParcelEvent,
-    PickupEvent, ArrivalEvent, DepartureEvent, Item
-)
+from domain import Parcel, ParcelHistory, DepartureEvent, Item
 
 
 class ParcelRegistry:
@@ -70,26 +67,6 @@ class ParcelRegistry:
         """Return all registered parcels."""
         return list(self._parcels.values())
 
-    def track_parcel(self, private_parcel_id: str) -> Optional[Tuple[int, List[Tuple[int, str]]]]:
-        """
-        Get parcel tracking information.
-        Returns (total_stops, history_entries) where history_entries is list of (timestamp, message).
-        Returns None if parcel not found.
-        """
-        parcel = self.find_by_id(private_parcel_id)
-        if parcel is None:
-            return None
-
-        # Convert events to human-readable messages
-        history_entries = []
-        for event in parcel.history.events:
-            message = self._event_to_message(event)
-            history_entries.append((event.timestamp, message))
-
-        total_stops = len(parcel.route.leg_ids)
-
-        return (total_stops, history_entries)
-
     def get_parcels_for_leg(self, leg_id: str) -> List[str]:
         """
         Get list of parcel IDs awaiting transport for a specific leg.
@@ -119,35 +96,3 @@ class ParcelRegistry:
             return None
 
         return parcel.route.leg_ids[departure_count]
-
-    def _event_to_message(self, event: ParcelEvent) -> str:
-        """Convert a parcel event to a human-readable message."""
-        if isinstance(event, PickupEvent):
-            return "Parcel picked up at final destination"
-        elif isinstance(event, ArrivalEvent):
-            return f"Arrived at {event.to}"
-        elif isinstance(event, DepartureEvent):
-            return f"Departed on leg {event.leg_id}"
-        else:
-            return "Unknown event"
-
-    def _derive_state_from_history(self, history: ParcelHistory) -> str:
-        """
-        Derive parcel state from its event history.
-        Returns one of: 'registered', 'in_transit', 'delivered', 'picked_up'
-        """
-        if not history.events:
-            return "registered"
-
-        last_event = history.events[-1]
-
-        if isinstance(last_event, PickupEvent):
-            return "picked_up"
-        elif isinstance(last_event, ArrivalEvent):
-            return "delivered"
-        elif isinstance(last_event, DepartureEvent):
-            return "in_transit"
-        else:
-            return "registered"
-
-

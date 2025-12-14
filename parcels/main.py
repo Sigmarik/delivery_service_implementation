@@ -148,18 +148,18 @@ def track_parcel(track_input: GetDeliveryStatusInput):
     """
     # Hash the private ID to get the public ID for lookup
     public_id = hashlib.sha256(track_input.privateParcelId.encode()).hexdigest()
-    result = registry.track_parcel(public_id)
+    parcel = registry.find_by_id(public_id)
 
-    if result is None:
+    if parcel is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
 
-    total_stops, history_data = result
-
-    # Convert to HistoryEntry models
+    # Convert events to human-readable messages using event.to_message()
     history_entries = [
-        HistoryEntry(timestamp=ts, message=msg)
-        for ts, msg in history_data
+        HistoryEntry(timestamp=event.timestamp, message=event.to_message())
+        for event in parcel.history.events
     ]
+
+    total_stops = len(parcel.route.leg_ids)
 
     return ParcelStatusHistory(
         totalStops=total_stops,
