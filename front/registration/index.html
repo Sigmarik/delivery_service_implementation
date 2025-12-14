@@ -399,6 +399,32 @@
             text-decoration: underline;
         }
         
+        /* New style for readonly display field */
+        .display-field {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .display-field-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .currency-symbol {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #28a745;
+        }
+        
         @media (max-width: 768px) {
             .form-row {
                 flex-direction: column;
@@ -413,6 +439,12 @@
             
             .private-key-container {
                 padding: 15px;
+            }
+            
+            .display-field-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
             }
         }
     </style>
@@ -466,8 +498,13 @@
                         <input type="number" id="weight" required min="1" placeholder="Enter weight in kilograms">
                     </div>
                     <div class="form-group">
-                        <label for="value">Total Value ($) *</label>
-                        <input type="number" id="totalValue" required min="1" placeholder="Total value of all items">
+                        <!-- Changed totalValue input to display-only field -->
+                        <label for="totalValue">Total Value ($) *</label>
+                        <div class="display-field-container">
+                            <span class="currency-symbol">$</span>
+                            <div id="totalValue" class="display-field">0</div>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 5px;">This value is automatically calculated from the items below.</small>
                     </div>
                 </div>
                 
@@ -688,6 +725,7 @@
         const privateKeyContainer = document.getElementById('privateKeyContainer');
         const privateKeyValue = document.getElementById('privateKeyValue');
         const copyPrivateKeyBtn = document.getElementById('copyPrivateKeyBtn');
+        const totalValueDisplay = document.getElementById('totalValue');
         
         // Add item to parcel registration
         addItemBtn.addEventListener('click', () => {
@@ -714,10 +752,14 @@
             // Add event listener to remove button
             itemEntry.querySelector('.remove-item').addEventListener('click', () => {
                 itemEntry.remove();
+                updateTotalValue();
             });
+            
+            // Add event listener to the new item value input
+            itemEntry.querySelector('.item-value').addEventListener('input', updateTotalValue);
         });
         
-        // Update total value when item values change
+        // Update total value display when item values change
         function updateTotalValue() {
             const itemValues = document.querySelectorAll('.item-value');
             let total = 0;
@@ -725,15 +767,18 @@
                 const value = parseInt(input.value) || 0;
                 total += value;
             });
-            document.getElementById('totalValue').value = total;
+            totalValueDisplay.textContent = total.toLocaleString();
+            
+            // Add validation feedback
+            if (total === 0) {
+                totalValueDisplay.style.color = '#dc3545';
+            } else {
+                totalValueDisplay.style.color = '#28a745';
+            }
         }
         
         // Listen for changes in item values
-        itemsList.addEventListener('input', (e) => {
-            if (e.target.classList.contains('item-value')) {
-                updateTotalValue();
-            }
-        });
+        itemsList.addEventListener('input', updateTotalValue);
         
         // Copy private key to clipboard
         copyPrivateKeyBtn.addEventListener('click', async () => {
@@ -761,6 +806,14 @@
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // Get the total value from display
+            const totalValue = parseInt(totalValueDisplay.textContent.replace(/,/g, '')) || 0;
+            
+            if (totalValue === 0) {
+                alert('Please add at least one item with a value greater than 0.');
+                return;
+            }
+            
             // Generate private ID and compute public ID
             const privateId = generatePrivateId();
             const publicId = await sha256(privateId);
@@ -779,7 +832,9 @@
             itemEntries.forEach(entry => {
                 const name = entry.querySelector('.item-name').value;
                 const value = parseInt(entry.querySelector('.item-value').value);
-                items.push({ name, value });
+                if (name && value) {
+                    items.push({ name, value });
+                }
             });
             
             // Create payload
@@ -848,13 +903,18 @@
                         </div>
                     `;
                     
+                    // Reset total value display
+                    totalValueDisplay.textContent = '0';
+                    totalValueDisplay.style.color = '#dc3545';
+                    
                     // Add event listener to the new remove button
                     document.querySelector('.remove-item').addEventListener('click', function() {
                         this.closest('.item-entry').remove();
+                        updateTotalValue();
                     });
                     
-                    // Reset total value
-                    document.getElementById('totalValue').value = '';
+                    // Add event listener to the new item value input
+                    document.querySelector('.item-value').addEventListener('input', updateTotalValue);
                 } else {
                     alert(`Error: ${data.message || 'Failed to register parcel'}`);
                 }
@@ -867,6 +927,18 @@
                 submitBtn.disabled = false;
             }
         });
+        
+        // Initialize remove button for the first item entry
+        document.querySelector('.remove-item').addEventListener('click', function() {
+            this.closest('.item-entry').remove();
+            updateTotalValue();
+        });
+        
+        // Initialize input listener for the first item value
+        document.querySelector('.item-value').addEventListener('input', updateTotalValue);
+        
+        // Initialize total value display
+        updateTotalValue();
         
         // Pickup Parcel Form
         const pickupForm = document.getElementById('pickupForm');
@@ -915,11 +987,6 @@
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
-        });
-        
-        // Initialize remove button for the first item entry
-        document.querySelector('.remove-item').addEventListener('click', function() {
-            this.closest('.item-entry').remove();
         });
     </script>
 </body>
