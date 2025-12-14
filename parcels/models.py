@@ -2,7 +2,7 @@
 Pydantic models for API request and response validation.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 
 
@@ -14,6 +14,8 @@ class ItemInfo(BaseModel):
 
 class ParcelCreationInfo(BaseModel):
     """Request model for parcel registration."""
+    model_config = ConfigDict(populate_by_name=True)
+
     items: List[ItemInfo] = Field(alias="items")
     length: int
     width: int
@@ -23,9 +25,6 @@ class ParcelCreationInfo(BaseModel):
     # Use Field with alias to match the exact field names from OpenAPI spec
     from_location: str = Field(alias="from")
     to_location: str = Field(alias="to")
-
-    class Config:
-        populate_by_name = True
 
 
 class DeliveryInfo(BaseModel):
