@@ -30,12 +30,43 @@ router_client = RouterStubClient()
 parcel_service = ParcelService(registry, router_client)
 
 
-@app.post("/register", response_model=DeliveryInfo, status_code=200)
+# Error response examples for documentation
+ERROR_RESPONSES = {
+    400: {
+        "description": "Bad Request",
+        "content": {
+            "application/json": {
+                "example": {"detail": "No valid route found for the given origin and destination"}
+            }
+        }
+    },
+    404: {
+        "description": "Not Found",
+        "content": {
+            "application/json": {
+                "example": {"detail": "Parcel not found"}
+            }
+        }
+    }
+}
+
+
+@app.post(
+    "/register",
+    response_model=DeliveryInfo,
+    status_code=200,
+    responses={
+        400: ERROR_RESPONSES[400]
+    }
+)
 def register_parcel(parcel_info: ParcelCreationInfo):
     """
     Register a new parcel for delivery.
-    Returns delivery cost, time, and pickup ID hash.
-    Returns 400 if no route can be found.
+
+    Returns delivery cost, time, and pickup ID hash on success.
+
+    **Error Responses:**
+    - **400 Bad Request**: No valid route found for the given origin and destination
     """
     # Generate UUID and hash it
     pickup_uuid = str(uuid.uuid4())
@@ -71,11 +102,20 @@ def register_parcel(parcel_info: ParcelCreationInfo):
     )
 
 
-@app.post("/pickup", response_model=bool, status_code=200)
+@app.post(
+    "/pickup",
+    response_model=bool,
+    status_code=200,
+    responses={
+        404: ERROR_RESPONSES[404]
+    }
+)
 def pickup_parcel(pickup_input: PickupInput):
     """
     Record that a parcel has been picked up at its final destination.
-    Returns 404 if parcel not found.
+
+    **Error Responses:**
+    - **404 Not Found**: Parcel not found
     """
     success = parcel_service.pickup_parcel(pickup_input.pickupIdHash)
 
@@ -85,11 +125,20 @@ def pickup_parcel(pickup_input: PickupInput):
     return True
 
 
-@app.get("/track", response_model=ParcelStatusHistory, status_code=200)
+@app.get(
+    "/track",
+    response_model=ParcelStatusHistory,
+    status_code=200,
+    responses={
+        404: ERROR_RESPONSES[404]
+    }
+)
 def track_parcel(pickupIdHash: str = Query(..., description="Parcel identifier")):
     """
     Get tracking history and status for a parcel.
-    Returns 404 if parcel not found.
+
+    **Error Responses:**
+    - **404 Not Found**: Parcel not found
     """
     result = parcel_service.track_parcel(pickupIdHash)
 
@@ -121,11 +170,29 @@ def get_parcels_for_leg(legId: str):
     return ParcelList(parcelIds=parcel_ids)
 
 
-@app.post("/take/{parcelId}", response_model=bool, status_code=200)
+@app.post(
+    "/take/{parcelId}",
+    response_model=bool,
+    status_code=200,
+    responses={
+        400: {
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Leg does not match the next expected leg for this parcel"}
+                }
+            }
+        },
+        404: ERROR_RESPONSES[404]
+    }
+)
 def take_parcel(parcelId: str, take_input: TakeParcelInput):
     """
     Record that a parcel is departing on a specific leg.
-    Returns 404 if parcel not found.
+
+    **Error Responses:**
+    - **400 Bad Request**: Leg ID does not match the next expected leg for this parcel
+    - **404 Not Found**: Parcel not found
     """
     result = parcel_service.record_departure(parcelId, take_input.legId)
 
@@ -141,11 +208,20 @@ def take_parcel(parcelId: str, take_input: TakeParcelInput):
     return True
 
 
-@app.post("/put/{parcelId}", response_model=bool, status_code=200)
+@app.post(
+    "/put/{parcelId}",
+    response_model=bool,
+    status_code=200,
+    responses={
+        404: ERROR_RESPONSES[404]
+    }
+)
 def put_parcel(parcelId: str, put_input: PutParcelInput):
     """
     Record that a parcel has arrived at a location.
-    Returns 404 if parcel not found.
+
+    **Error Responses:**
+    - **404 Not Found**: Parcel not found
     """
     success = parcel_service.record_arrival(parcelId, put_input.location)
 
